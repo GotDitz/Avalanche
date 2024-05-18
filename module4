@@ -16,10 +16,10 @@ contract DegenToken is ERC20, Ownable {
     mapping(uint256 => uint256) public ShopPrices;
 
     constructor() ERC20("Degen", "DGN") Ownable(msg.sender) {
-        ShopPrices[1] = 100;
+        ShopPrices[1] = 80;
         ShopPrices[2] = 60;
-        ShopPrices[3] = 30;
-        ShopPrices[4] = 10;
+        ShopPrices[3] = 40;
+        ShopPrices[4] = 20;
     }
 
 
@@ -34,7 +34,7 @@ contract DegenToken is ERC20, Ownable {
     }
 
     function showShopItems() external pure returns (string memory) {
-        string memory saleOptions = "The items on sale: {1} Degen NFT (100) {2} Degen T-shirt & Hoodie (60) {3} Random IN-GAME Item (30) {4} Degen Sticker (10)";
+        string memory saleOptions = "The items on sale: {1} Degen Shoes (100) {2} Degen Slies (60) {3} Degen Plushie Toy (30) {4} Degen Keychain (10)";
         return saleOptions;
     }
 
