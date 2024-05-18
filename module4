@@ -13,51 +13,81 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract DegenToken is ERC20, Ownable {
 
-    mapping(uint256 => uint256) public ShopPrices;
+    struct Item {
+        string name;
+        uint256 price;
+    }
+
+    mapping(uint256 => Item) public shopItems;
+
+    event TokenMinted(address indexed to, uint256 amount);
+    event TokenBurned(address indexed from, uint256 amount);
+    event ItemRedeemed(address indexed user, uint256 itemId, uint256 price);
 
     constructor() ERC20("Degen", "DGN") Ownable(msg.sender) {
-        ShopPrices[1] = 80;
-        ShopPrices[2] = 60;
-        ShopPrices[3] = 40;
-        ShopPrices[4] = 20;
+        shopItems[1] = Item("Degen Shoes", 80);
+        shopItems[2] = Item("Degen Slides", 60);
+        shopItems[3] = Item("Degen Plushie Toy", 40);
+        shopItems[4] = Item("Degen Keychain", 20);
     }
 
-
-    function mintDGN(address _to, uint256 _amount) public onlyOwner {
-        _mint(_to, _amount);
+    function mint(address to, uint256 amount) external onlyOwner {
+        _mint(to, amount);
+        emit TokenMinted(to, amount);
     }
 
-    function transferDGN(address _to, uint256 _amount) public {
-        require(balanceOf(msg.sender) >= _amount, "Transfer Failed: Insufficient balance.");
-        approve(msg.sender, _amount);
-        transferFrom(msg.sender, _to, _amount);
+    function redeem(uint256 itemId) external {
+        Item memory item = shopItems[itemId];
+        require(item.price > 0, "Item not available.");
+        require(balanceOf(msg.sender) >= item.price, "Insufficient balance to redeem.");
+        _transfer(msg.sender, owner(), item.price);
+        emit ItemRedeemed(msg.sender, itemId, item.price);
     }
 
-    function showShopItems() external pure returns (string memory) {
-        string memory saleOptions = "The items on sale: {1} Degen Shoes (100) {2} Degen Slies (60) {3} Degen Plushie Toy (30) {4} Degen Keychain (10)";
-        return saleOptions;
-    }
-
-    function redeemDGN(uint256 _item) public {
-        require(ShopPrices[_item] > 0, "Item is not available.");
-        require(_item <= 4, "Item is not available.");
-        require(balanceOf(msg.sender) >= ShopPrices[_item], "Redeem Failed: Insufficient balance.");
-        transfer(owner(), ShopPrices[_item]);
-    }
-    
-    function burnDGN(uint256 _amount) public {
-        require(balanceOf(msg.sender) >= _amount, "Burn Failed: Insufficient balance.");
-        approve(msg.sender, _amount);
-        _burn(msg.sender, _amount);
+    function burn(uint256 amount) external {
+        _burn(msg.sender, amount);
+        emit TokenBurned(msg.sender, amount);
     }
 
     function getBalance() external view returns (uint256) {
-        return this.balanceOf(msg.sender);
+        return balanceOf(msg.sender);
     }
 
-    function decimals() override public pure returns (uint8) {
+    function showShopItems() external view returns (string memory) {
+        return string(
+            abi.encodePacked(
+                "The items on sale: ",
+                "{1} ", shopItems[1].name, " (", uint2str(shopItems[1].price), ") ",
+                "{2} ", shopItems[2].name, " (", uint2str(shopItems[2].price), ") ",
+                "{3} ", shopItems[3].name, " (", uint2str(shopItems[3].price), ") ",
+                "{4} ", shopItems[4].name, " (", uint2str(shopItems[4].price), ")"
+            )
+        );
+    }
+
+    function decimals() public view virtual override returns (uint8) {
         return 0;
     }
 
-    
+    function uint2str(uint256 _i) internal pure returns (string memory) {
+        if (_i == 0) {
+            return "0";
+        }
+        uint256 j = _i;
+        uint256 length;
+        while (j != 0) {
+            length++;
+            j /= 10;
+        }
+        bytes memory bstr = new bytes(length);
+        uint256 k = length;
+        while (_i != 0) {
+            k = k - 1;
+            uint8 temp = (48 + uint8(_i - _i / 10 * 10));
+            bytes1 b1 = bytes1(temp);
+            bstr[k] = b1;
+            _i /= 10;
+        }
+        return string(bstr);
+    }
 }
