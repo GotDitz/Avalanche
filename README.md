@@ -1,42 +1,63 @@
-# Building-on-Avalanche-ETH-AVAX
-Overview
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.25;
 
-The DegenToken smart contract empowers gaming platforms to oversee a personalized ERC20 token, providing features for creating, transferring, exchanging, eliminating, and verifying balances. It incorporates a system allowing players to exchange their tokens for in-game items at predetermined prices. Security measures are in place by limiting specific actions to the contract owner. Tailored for use on the Avalanche network, it capitalizes on its compatibility with Ethereum smart contracts and cost-efficient transaction fees. It's important to have the requisite development environment configured to engage with the Avalanche network.
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-## Requirements
-* Solidity version 0.8.20
-* OpenZeppelin contracts for ERC20 and Ownable functionalities
-* Avalanche-compatible development tools (e.g., Avalanche C-Chain, Remix, Truffle, Hardhat)
-* MetaMask or other web3 wallets configured for the Avalanche network
+contract DegenToken is ERC20 {
+    address private owner;
+    mapping(uint256 => uint256) public leagueTokens;
+    mapping(address => mapping(uint256 => uint256)) public redeemedItems;
+
+    constructor(string memory name, string memory symbol) ERC20(name, symbol) {
+        owner = msg.sender;
+        leagueTokens[1] = 10000;
+        leagueTokens[2] = 8000;
+        leagueTokens[3] = 7000;
+        leagueTokens[4] = 5000;
+        leagueTokens[5] = 3000;
+        leagueTokens[6] = 1000;
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only owner can call this function");
+        _;
+    }
+
+    function mint(address account, uint256 amount) public onlyOwner {
+        require(amount <= 10000, "Minting amount exceeds 10,000 tokens limit");
+        _mint(account, amount);
+    }
+
+    function burnToken(address account, uint256 _amount) public {
+    require(balanceOf(account) >= _amount, "Burn Failed: Insufficient Tokens.");
+    _burn(account, _amount);
+    }
 
 
-## Usage
-Minting New Tokens
-* Tokens can only be created by the contract owner. Gamers can be rewarded with this in-game.
+    function transfer(address recipient, uint256 amount) public override returns (bool) {
+        require(recipient != address(0), "ERC20: transfer to the zero address");
+        _transfer(msg.sender, recipient, amount);
+        return true;
+    }
 
-Transferring Tokens
-* With the transferDGN feature, players can give tokens to other players.
+    function transferRewards(address to, uint256 itemId) public {
+        uint256 redeemedItemCount = redeemedItems[msg.sender][itemId];
+        require(redeemedItemCount > 0, "Insufficient redeemed items to transfer");
+        redeemedItems[msg.sender][itemId]--;
+        redeemedItems[to][itemId]++;
+}
 
-Redeeming Tokens
-* Tokens can be exchanged for goods in the in-game store by players. Every item has a set price.
-
-Burning Tokens
-* Tokens that a player no longer needs can be burned.
-
-Checking Token Balance
-* Token balance checks are available to players at all times.
-
-Viewing Shop Items
-* Gamers may see the things in the shop that can be redeemed..
-
-## Deployment
-* Set up your Avalanche network configuration in your development environment.
-* Create the contract with your tool of choice (Hardhat, Remix, etc.).
-* Give the Avalanche C-Chain access to the contract.
-* Verify the contract on a block explorer (e.g., SnowTrace).
-
-## Authors
-Sean Ydnar A. Abellanosa
-
-## License
-This project is licensed under the MIT License - see the LICENSE.md file for details
+    function redeem(uint256 itemId) public {
+        uint256 itemPrice = leagueTokens[itemId];
+        require(itemPrice > 0, "Item does not exist");
+        require(balanceOf(msg.sender) >= itemPrice, "Insufficient balance to redeem item");
+        _burn(msg.sender, itemPrice);
+        redeemedItems[msg.sender][itemId]++;
+    }
+    
+    function viewRedeemedItems(address account, uint256 itemId) public view returns (uint256) {
+        return redeemedItems[account][itemId];
+    }
+  
+}
