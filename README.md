@@ -39,6 +39,10 @@ Deploy the contract on a compatible Ethereum Virtual Machine (EVM) environment. 
 - Perform thorough testing, including unit tests and integration tests, before deploying the contract to the mainnet.
 - Consider implementing additional security measures, such as audit trails and role-based access control, depending on the specific requirements of the application.
 
+
+## Author
+   Sean Ydnar A. Abellanosa
+
 ## License
 
 This contract is released under the MIT License. See the `LICENSE` file for more information.
