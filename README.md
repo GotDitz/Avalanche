@@ -1,63 +1,45 @@
-// SPDX-License-Identifier: MIT
-pragma solidity 0.8.25;
+# Degen Token and Store Contract
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+## Overview
 
-contract DegenToken is ERC20 {
-    address private owner;
-    mapping(uint256 => uint256) public leagueTokens;
-    mapping(address => mapping(uint256 => uint256)) public redeemedItems;
+This Solidity smart contract, named "Degen", is an implementation of a decentralized token (ERC20) with an attached store feature. Users can interact with the contract to mint tokens, purchase items from a predefined store, redeem items for tokens, and transfer tokens between addresses.
 
-    constructor(string memory name, string memory symbol) ERC20(name, symbol) {
-        owner = msg.sender;
-        leagueTokens[1] = 10000;
-        leagueTokens[2] = 8000;
-        leagueTokens[3] = 7000;
-        leagueTokens[4] = 5000;
-        leagueTokens[5] = 3000;
-        leagueTokens[6] = 1000;
-    }
+The contract includes the following main functionalities:
 
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Only owner can call this function");
-        _;
-    }
+1. ERC20 Token:
+   - Minting: The contract owner can mint new tokens and distribute them to specified addresses.
+   - Burning: Users can burn their own tokens, reducing the total token supply.
 
-    function mint(address account, uint256 amount) public onlyOwner {
-        require(amount <= 10000, "Minting amount exceeds 10,000 tokens limit");
-        _mint(account, amount);
-    }
+2. Store:
+   - Item Addition: The contract owner can add items to the store with unique IDs, names, and prices.
+   - Item Purchase: Users can buy items from the store using their token balance.
+   - Item Redemption: Users can redeem items for tokens, consuming the specified amount of tokens.
 
-    function burnToken(address account, uint256 _amount) public {
-    require(balanceOf(account) >= _amount, "Burn Failed: Insufficient Tokens.");
-    _burn(account, _amount);
-    }
+## Usage
 
+### Deployment
 
-    function transfer(address recipient, uint256 amount) public override returns (bool) {
-        require(recipient != address(0), "ERC20: transfer to the zero address");
-        _transfer(msg.sender, recipient, amount);
-        return true;
-    }
+Deploy the contract on a compatible Ethereum Virtual Machine (EVM) environment. Ensure proper configuration of gas limits and network selection.
 
-    function transferRewards(address to, uint256 itemId) public {
-        uint256 redeemedItemCount = redeemedItems[msg.sender][itemId];
-        require(redeemedItemCount > 0, "Insufficient redeemed items to transfer");
-        redeemedItems[msg.sender][itemId]--;
-        redeemedItems[to][itemId]++;
-}
+### Interacting with the Contract
 
-    function redeem(uint256 itemId) public {
-        uint256 itemPrice = leagueTokens[itemId];
-        require(itemPrice > 0, "Item does not exist");
-        require(balanceOf(msg.sender) >= itemPrice, "Insufficient balance to redeem item");
-        _burn(msg.sender, itemPrice);
-        redeemedItems[msg.sender][itemId]++;
-    }
-    
-    function viewRedeemedItems(address account, uint256 itemId) public view returns (uint256) {
-        return redeemedItems[account][itemId];
-    }
-  
-}
+1. **Minting Tokens**: The contract owner can mint new tokens and distribute them to specified addresses using the `mint` function.
+
+2. **Adding Items to Store**: The contract owner can add items to the store using the `addItemToStore` function, providing the item name and price.
+
+3. **Buying Items from Store**: Users can buy items from the store using the `buyItemFromStore` function, providing the item ID. The price of the item will be deducted from the user's token balance, and ownership of the item will be transferred to the user.
+
+4. **Redeeming Items for Tokens**: Users can redeem items for tokens using the `redeem` function, providing the amount of tokens to redeem and the ID of the item to redeem. The specified amount of tokens will be burned from the user's balance, and the item will be transferred to the user.
+
+5. **Transferring Tokens**: Users can transfer tokens to other addresses using the standard ERC20 `transfer` function.
+
+## Security and Considerations
+
+- Ensure proper access control mechanisms are in place to prevent unauthorized access to critical functions.
+- Perform thorough testing, including unit tests and integration tests, before deploying the contract to the mainnet.
+- Consider implementing additional security measures, such as audit trails and role-based access control, depending on the specific requirements of the application.
+
+## License
+
+This contract is released under the MIT License. See the `LICENSE` file for more information.
+
