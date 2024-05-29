@@ -1,93 +1,76 @@
 // SPDX-License-Identifier: MIT
-/*
-1. Minting new tokens: The platform should be able to create new tokens and distribute them to players as rewards. Only the owner can mint tokens.
-2. Transferring tokens: Players should be able to transfer their tokens to others.
-3. Redeeming tokens: Players should be able to redeem their tokens for items in the in-game store.
-4. Checking token balance: Players should be able to check their token balance at any time.
-5. Burning tokens: Anyone should be able to burn tokens, that they own, that are no longer needed.
-*/
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract DegenToken is ERC20, Ownable {
-
-    struct Item {
-        string name;
-        uint256 price;
+contract Degen is ERC20, Ownable {
+    struct StoreItem {
+        uint256 itemId; // Unique ID for the item
+        string name;    // Name of the item
+        uint256 price;  // Price of the item
     }
 
-    mapping(uint256 => Item) public shopItems;
+    mapping(uint256 => StoreItem) public storeItems;
+    uint256 public nextItemId = 1;
 
-    event TokenMinted(address indexed to, uint256 amount);
-    event TokenBurned(address indexed from, uint256 amount);
-    event ItemRedeemed(address indexed user, uint256 itemId, uint256 price);
+    event ItemRedeemed(address indexed player, uint256 itemId, string itemName, uint256 itemPrice);
+    event ItemPurchased(address indexed player, uint256 itemId, string itemName, uint256 itemPrice);
 
-    constructor() ERC20("Degen", "DGN") Ownable(msg.sender) {
-        shopItems[1] = Item("Degen Shoes", 80);
-        shopItems[2] = Item("Degen Slides", 60);
-        shopItems[3] = Item("Degen Plushie Toy", 40);
-        shopItems[4] = Item("Degen Keychain", 20);
+    constructor(address initialOwner) ERC20("Degen", "DGN") Ownable(initialOwner) {
+        _mint(msg.sender, 1000000 * (10 ** uint256(decimals())));
+        
+       
+             addItemToStore("Bag", 300); // Item ID: 1, Price: 300 DGN
+        addItemToStore("Shirt", 275);  // Item ID: 2, Price: 275 DGN
+        addItemToStore("Foods", 250);  // Item ID: 3, Price: 250 DGN
+        addItemToStore("StepOns", 225);  // Item ID: 4, Price: 225 DGN
+        addItemToStore("Plush&Keychain", 200);  // Item ID: 5, Price: 200 DGN
     }
 
-    function mint(address to, uint256 amount) external onlyOwner {
+    function addItemToStore(string memory name, uint256 price) public onlyOwner {
+        storeItems[nextItemId] = StoreItem(nextItemId, name, price);
+        nextItemId++;
+    }
+
+    function mint(address to, uint256 amount) public onlyOwner {
         _mint(to, amount);
-        emit TokenMinted(to, amount);
     }
 
-    function redeem(uint256 itemId) external {
-        Item memory item = shopItems[itemId];
-        require(item.price > 0, "Item not available.");
-        require(balanceOf(msg.sender) >= item.price, "Insufficient balance to redeem.");
-        _transfer(msg.sender, owner(), item.price);
-        emit ItemRedeemed(msg.sender, itemId, item.price);
+    function transfer(address to, uint256 amount) public override returns (bool) {
+        return ERC20.transfer(to, amount);
     }
 
-    function burn(uint256 amount) external {
+    function redeem(uint256 amount, uint256 itemId) public {
+        require(itemId > 0 && itemId < nextItemId, "Invalid item ID");
+        require(balanceOf(msg.sender) >= amount, "Insufficient balance");
+
         _burn(msg.sender, amount);
-        emit TokenBurned(msg.sender, amount);
+
+        _transfer(owner(), msg.sender, storeItems[itemId].price);
+
+
+        emit ItemRedeemed(msg.sender, itemId, storeItems[itemId].name, storeItems[itemId].price);
     }
 
-    function getBalance() external view returns (uint256) {
-        return balanceOf(msg.sender);
+    function buyItemFromStore(uint256 itemId) public {
+        require(itemId > 0 && itemId < nextItemId, "Invalid item ID");
+        require(balanceOf(msg.sender) >= storeItems[itemId].price, "Insufficient balance");
+
+    
+        // Transfer the price of the item to the store owner
+        _transfer(msg.sender, owner(), storeItems[itemId].price);
+        
+        // Add logic for delivering the item to the player
+        // For demonstration purposes, let's emit an event to signify the purchase
+        emit ItemPurchased(msg.sender, itemId, storeItems[itemId].name, storeItems[itemId].price);
     }
 
-    function showShopItems() external view returns (string memory) {
-        return string(
-            abi.encodePacked(
-                "The items on sale: ",
-                "{1} ", shopItems[1].name, " (", uint2str(shopItems[1].price), ") ",
-                "{2} ", shopItems[2].name, " (", uint2str(shopItems[2].price), ") ",
-                "{3} ", shopItems[3].name, " (", uint2str(shopItems[3].price), ") ",
-                "{4} ", shopItems[4].name, " (", uint2str(shopItems[4].price), ")"
-            )
-        );
+    function burn(uint256 amount) public {
+        _burn(msg.sender, amount);
     }
 
-    function decimals() public view virtual override returns (uint8) {
-        return 0;
-    }
-
-    function uint2str(uint256 _i) internal pure returns (string memory) {
-        if (_i == 0) {
-            return "0";
-        }
-        uint256 j = _i;
-        uint256 length;
-        while (j != 0) {
-            length++;
-            j /= 10;
-        }
-        bytes memory bstr = new bytes(length);
-        uint256 k = length;
-        while (_i != 0) {
-            k = k - 1;
-            uint8 temp = (48 + uint8(_i - _i / 10 * 10));
-            bytes1 b1 = bytes1(temp);
-            bstr[k] = b1;
-            _i /= 10;
-        }
-        return string(bstr);
+    function balanceOf(address account) public view override returns (uint256) {
+        return ERC20.balanceOf(account);
     }
 }
