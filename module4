@@ -12,6 +12,7 @@ contract Degen is ERC20, Ownable {
     }
 
     mapping(uint256 => StoreItem) public storeItems;
+    mapping(address => uint256[]) public playerItems; // Mapping to track redeemed items for each player
     uint256 public nextItemId = 1;
 
     event ItemRedeemed(address indexed player, uint256 itemId, string itemName, uint256 itemPrice);
@@ -19,13 +20,12 @@ contract Degen is ERC20, Ownable {
 
     constructor(address initialOwner) ERC20("Degen", "DGN") Ownable(initialOwner) {
         _mint(msg.sender, 1000000 * (10 ** uint256(decimals())));
-        
-       
-             addItemToStore("Bag", 300); // Item ID: 1, Price: 300 DGN
-        addItemToStore("Shirt", 275);  // Item ID: 2, Price: 275 DGN
-        addItemToStore("Foods", 250);  // Item ID: 3, Price: 250 DGN
-        addItemToStore("StepOns", 225);  // Item ID: 4, Price: 225 DGN
-        addItemToStore("Plush&Keychain", 200);  // Item ID: 5, Price: 200 DGN
+
+        addItemToStore("Bag", 300); // Item ID: 1, Price: 300 DGN
+        addItemToStore("Shirt", 275); // Item ID: 2, Price: 275 DGN
+        addItemToStore("Foods", 250); // Item ID: 3, Price: 250 DGN
+        addItemToStore("StepOns", 225); // Item ID: 4, Price: 225 DGN
+        addItemToStore("Plush&Keychain", 200); // Item ID: 5, Price: 200 DGN
     }
 
     function addItemToStore(string memory name, uint256 price) public onlyOwner {
@@ -41,14 +41,14 @@ contract Degen is ERC20, Ownable {
         return ERC20.transfer(to, amount);
     }
 
-    function redeem(uint256 amount, uint256 itemId) public {
+    function redeem(uint256 itemId) public {
         require(itemId > 0 && itemId < nextItemId, "Invalid item ID");
-        require(balanceOf(msg.sender) >= amount, "Insufficient balance");
+        require(balanceOf(msg.sender) >= storeItems[itemId].price, "Insufficient balance");
 
-        _burn(msg.sender, amount);
+        _burn(msg.sender, storeItems[itemId].price);
 
-        _transfer(owner(), msg.sender, storeItems[itemId].price);
-
+        // Record the redeemed item for the player
+        playerItems[msg.sender].push(itemId);
 
         emit ItemRedeemed(msg.sender, itemId, storeItems[itemId].name, storeItems[itemId].price);
     }
@@ -57,12 +57,10 @@ contract Degen is ERC20, Ownable {
         require(itemId > 0 && itemId < nextItemId, "Invalid item ID");
         require(balanceOf(msg.sender) >= storeItems[itemId].price, "Insufficient balance");
 
-    
         // Transfer the price of the item to the store owner
         _transfer(msg.sender, owner(), storeItems[itemId].price);
-        
-        // Add logic for delivering the item to the player
-        // For demonstration purposes, let's emit an event to signify the purchase
+
+        // For demonstration purposes, emit an event to signify the purchase
         emit ItemPurchased(msg.sender, itemId, storeItems[itemId].name, storeItems[itemId].price);
     }
 
@@ -72,5 +70,10 @@ contract Degen is ERC20, Ownable {
 
     function balanceOf(address account) public view override returns (uint256) {
         return ERC20.balanceOf(account);
+    }
+
+    // Function to get the items redeemed by a player
+    function getPlayerItems(address player) public view returns (uint256[] memory) {
+        return playerItems[player];
     }
 }
