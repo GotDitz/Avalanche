@@ -1,49 +1,68 @@
-# Degen Token and Store Contract
+# Degen Token Contract
 
 ## Overview
 
-This Solidity smart contract, named "Degen", is an implementation of a decentralized token (ERC20) with an attached store feature. Users can interact with the contract to mint tokens, purchase items from a predefined store, redeem items for tokens, and transfer tokens between addresses.
+The Degen Token Contract is an implementation of the ERC20 token standard with additional functionalities to manage a store of items that users can redeem or purchase using the Degen (DGN) tokens. The contract leverages OpenZeppelin's ERC20 and Ownable contracts for standard token functionalities and access control.
 
-The contract includes the following main functionalities:
+## Features
 
-1. ERC20 Token:
-   - Minting: The contract owner can mint new tokens and distribute them to specified addresses.
-   - Burning: Users can burn their own tokens, reducing the total token supply.
+- **ERC20 Token**: Provides all standard functionalities of an ERC20 token, including minting, burning, and transferring tokens.
+- **Ownable**: Restricts certain functions to the contract owner, enhancing security and control.
+- **Store Management**: Allows the contract owner to add items to a store. Users can redeem or purchase these items using DGN tokens.
+- **Events**: Emits events to log item redemptions and purchases for transparency and tracking.
 
-2. Store:
-   - Item Addition: The contract owner can add items to the store with unique IDs, names, and prices.
-   - Item Purchase: Users can buy items from the store using their token balance.
-   - Item Redemption: Users can redeem items for tokens, consuming the specified amount of tokens.
+## Contract Details
+
+### Inherited Contracts
+
+- **ERC20**: Implements the ERC20 token standard, allowing for the creation, transfer, and management of tokens.
+- **Ownable**: Provides ownership functionality, restricting access to certain functions to only the contract owner.
+
+### State Variables
+
+- **storeItems**: A mapping that associates unique item IDs with `StoreItem` structs, which contain details such as the item’s ID, name, and price.
+- **playerItems**: A mapping that tracks redeemed items for each player, associating player addresses with arrays of item IDs.
+- **nextItemId**: A counter used to assign unique IDs to new store items.
+
+### Events
+
+- **ItemRedeemed**: Emitted when a player redeems an item from the store. Logs the player's address, item ID, item name, and item price.
+- **ItemPurchased**: Emitted when a player purchases an item from the store. Logs the player's address, item ID, item name, and item price.
+
+### Constructor
+
+The constructor initializes the token with the name "Degen" and the symbol "DGN", mints an initial supply of 1,000,000 DGN tokens to the contract deployer, and adds initial items to the store.
+
+### Functions
+
+- **addItemToStore**: Allows the owner to add a new item to the store by specifying the item's name and price.
+- **mint**: Allows the owner to mint new DGN tokens to a specified address.
+- **transfer**: Enables the transfer of DGN tokens to another address.
+- **redeem**: Allows users to redeem an item from the store by burning the required amount of DGN tokens from their balance.
+- **buyItemFromStore**: Allows users to purchase an item from the store by transferring the required amount of DGN tokens to the owner's balance.
+- **burn**: Allows users to burn a specified amount of DGN tokens from their balance.
+- **balanceOf**: Returns the balance of DGN tokens for a specified address.
+- **getPlayerItems**: Returns a list of item IDs that a specific player has redeemed.
 
 ## Usage
 
-### Deployment
+### Deploying the Contract
 
-Deploy the contract on a compatible Ethereum Virtual Machine (EVM) environment. Ensure proper configuration of gas limits and network selection.
+1. Deploy the contract with the initial owner's address as a parameter.
+2. The contract mints an initial supply of 1,000,000 DGN tokens to the deployer's address.
+3. Initial items are added to the store automatically upon deployment.
 
 ### Interacting with the Contract
 
-1. **Minting Tokens**: The contract owner can mint new tokens and distribute them to specified addresses using the `mint` function.
-
-2. **Adding Items to Store**: The contract owner can add items to the store using the `addItemToStore` function, providing the item name and price.
-
-3. **Buying Items from Store**: Users can buy items from the store using the `buyItemFromStore` function, providing the item ID. The price of the item will be deducted from the user's token balance, and ownership of the item will be transferred to the user.
-
-4. **Redeeming Items for Tokens**: Users can redeem items for tokens using the `redeem` function, providing the amount of tokens to redeem and the ID of the item to redeem. The specified amount of tokens will be burned from the user's balance, and the item will be transferred to the user.
-
-5. **Transferring Tokens**: Users can transfer tokens to other addresses using the standard ERC20 `transfer` function.
-
-## Security and Considerations
-
-- Ensure proper access control mechanisms are in place to prevent unauthorized access to critical functions.
-- Perform thorough testing, including unit tests and integration tests, before deploying the contract to the mainnet.
-- Consider implementing additional security measures, such as audit trails and role-based access control, depending on the specific requirements of the application.
-
+1. **Minting Tokens**: Only the contract owner can mint new tokens to a specified address.
+2. **Adding Store Items**: The contract owner can add new items to the store by specifying their names and prices.
+3. **Redeeming Items**: Users can redeem store items by burning the corresponding amount of DGN tokens from their balance.
+4. **Purchasing Items**: Users can purchase store items by transferring the corresponding amount of DGN tokens to the owner's balance.
 
 ## Author
-   Sean Ydnar A. Abellanosa
+
+Sean Ydnar A. Abellanosa
 
 ## License
 
-This contract is released under the MIT License. See the `LICENSE` file for more information.
-
+This project is licensed under the MIT License - see the LICENSE.md file for details
