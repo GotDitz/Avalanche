@@ -4,46 +4,51 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
+
 contract Degen is ERC20, Ownable {
+    
     struct StoreItem {
-        uint256 itemId; // Unique ID for the item
-        string name;    // Name of the item
-        uint256 price;  // Price of the item
+        uint256 itemId; 
+        string name;    
+        uint256 price;  
     }
-
+    
     mapping(uint256 => StoreItem) public storeItems;
-    mapping(address => uint256[]) public playerItems; // Mapping to track redeemed items for each player
-    mapping(address => mapping(uint256 => bool)) public hasRedeemedItem; // Tracks if a player has redeemed a specific item
-    mapping(address => uint256) public lastRedemptionTime; // Tracks the last redemption time for each player
+    mapping(address => uint256[]) public playerItems; 
+    mapping(address => mapping(uint256 => bool)) public hasRedeemedItem; 
+    mapping(address => uint256) public lastRedemptionTime; 
     uint256 public nextItemId = 1;
-    uint256 public cooldownPeriod = 1 days; // 1 day cooldown period
+    uint256 public cooldownPeriod = 1 days; 
 
+    
     event ItemRedeemed(address indexed player, uint256 itemId, string itemName, uint256 itemPrice);
+    
     event ItemPurchased(address indexed player, uint256 itemId, string itemName, uint256 itemPrice);
 
+    
     constructor(address initialOwner) ERC20("Degen", "DGN") Ownable(initialOwner) {
-        _mint(msg.sender, 1000000 * (10 ** uint256(decimals())));
+        _mint(msg.sender, 0 * (10 ** uint256(decimals())));
 
-        addItemToStore("Bag", 300); // Item ID: 1, Price: 300 DGN
-        addItemToStore("Shirt", 275); // Item ID: 2, Price: 275 DGN
-        addItemToStore("Foods", 250); // Item ID: 3, Price: 250 DGN
-        addItemToStore("StepOns", 225); // Item ID: 4, Price: 225 DGN
-        addItemToStore("Plush&Keychain", 200); // Item ID: 5, Price: 200 DGN
+        addItemToStore("Bag", 300); 
+        addItemToStore("Shirt", 275);
+        addItemToStore("Foods", 250); 
+        addItemToStore("Flipflops", 225); 
+        addItemToStore("Plush&Keychain", 200); 
     }
-
+    
     function addItemToStore(string memory name, uint256 price) public onlyOwner {
         storeItems[nextItemId] = StoreItem(nextItemId, name, price);
         nextItemId++;
     }
-
+    
     function mint(address to, uint256 amount) public onlyOwner {
         _mint(to, amount);
     }
-
+   
     function transfer(address to, uint256 amount) public override returns (bool) {
         return ERC20.transfer(to, amount);
     }
-
+    
     function redeem(uint256 itemId) public {
         require(itemId > 0 && itemId < nextItemId, "Invalid item ID");
         require(balanceOf(msg.sender) >= storeItems[itemId].price, "Insufficient balance");
@@ -52,39 +57,39 @@ contract Degen is ERC20, Ownable {
 
         _burn(msg.sender, storeItems[itemId].price);
 
-        // Record the redeemed item for the player
+        
         playerItems[msg.sender].push(itemId);
         hasRedeemedItem[msg.sender][itemId] = true;
         lastRedemptionTime[msg.sender] = block.timestamp;
 
         emit ItemRedeemed(msg.sender, itemId, storeItems[itemId].name, storeItems[itemId].price);
     }
-
+    
     function buyItemFromStore(uint256 itemId) public {
         require(itemId > 0 && itemId < nextItemId, "Invalid item ID");
         require(balanceOf(msg.sender) >= storeItems[itemId].price, "Insufficient balance");
 
-        // Transfer the price of the item to the store owner
+        
         _transfer(msg.sender, owner(), storeItems[itemId].price);
 
-        // For demonstration purposes, emit an event to signify the purchase
+        
         emit ItemPurchased(msg.sender, itemId, storeItems[itemId].name, storeItems[itemId].price);
     }
-
+   
     function burn(uint256 amount) public {
         _burn(msg.sender, amount);
     }
-
+    
     function balanceOf(address account) public view override returns (uint256) {
         return ERC20.balanceOf(account);
     }
 
-    // Function to get the items redeemed by a player
+    
     function getPlayerItems(address player) public view returns (uint256[] memory) {
         return playerItems[player];
     }
 
-    // Function to update the cooldown period
+    
     function setCooldownPeriod(uint256 _cooldownPeriod) public onlyOwner {
         cooldownPeriod = _cooldownPeriod;
     }
