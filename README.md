@@ -3,19 +3,19 @@
 The `Degen` smart contract is an ERC20 token with additional functionality for a virtual store. Players can redeem items from the store using Degen tokens (DGN). The contract includes mechanisms to ensure items can only be redeemed once per player and enforces a cooldown period between redemptions.
 
 ## Table of Contents
-- [Contract Overview](#contract-overview)
-- [Key Components](#key-components)
-  - [Structs](#structs)
-  - [State Variables](#state-variables)
-  - [Events](#events)
-- [Constructor](#constructor)
-- [Functions](#functions)
-  - [Store Management](#store-management)
-  - [Token Management](#token-management)
-  - [Redemption and Purchase](#redemption-and-purchase)
-  - [Utility](#utility)
-- [Deployment](#deployment)
-- [Usage](#usage)
+- [Contract Overview]
+- [Key Components]
+  - [Structs]
+  - [State Variables]
+  - [Events]
+- [Constructor](
+- [Functions]
+  - [Store Management]
+  - [Token Management]
+  - [Redemption and Purchase]
+  - [Utility]
+- [Deployment]
+- [Usage]
 
 ## Contract Overview
 
